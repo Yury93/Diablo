@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace WelcomeToHell
 {
+    [RequireComponent(typeof(CharacterController))]
     public class ClickToMove : MonoBehaviour
     {
         [SerializeField] private CharacterController charController;

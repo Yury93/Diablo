@@ -1,25 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
-public class Character : MonoBehaviour
+namespace FightSystem
 {
-    [SerializeField] private CharacterController charController;
-    [SerializeField] private float moveSpeed;
-    private MovementController movementController;
-    private void Start()
+    [RequireComponent(typeof(CharacterController))]
+    public class Character : MonoBehaviour
     {
-        movementController = new MovementController(charController, moveSpeed);
-    }
-    public IEnumerator MoveToPosition()
-    {
-        while(movementController.LocatePosition())
+        [SerializeField] private CharacterController charController;
+        [SerializeField] private float moveSpeed;
+        private MovementController movementController;
+        private void Start()
         {
-
+            charController = GetComponent<CharacterController>();
+            movementController = new MovementController(charController);
         }
-
-        yield return null;
+        private void Update()
+        {
+            movementController.LocatePosition(transform, 1, moveSpeed);
+        }
     }
-
 }

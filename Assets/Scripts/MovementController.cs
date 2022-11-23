@@ -1,62 +1,79 @@
 using UnityEngine;
 
 
-public class MovementController
+namespace FightSystem
 {
-    private CharacterController charController;
-    private float speedMove;
-    private Transform myTransform;
-    private Vector3 newPosition;
-
-    public MovementController(CharacterController characterController, float speedMove)
+    public class MovementController
     {
-        this.charController = characterController;
-        this.speedMove = speedMove;
-    }
-
-    public bool LocatePosition()
-    {
-        if (Input.GetMouseButtonDown(0))
+        private CharacterController charController;
+        private float speedMove;
+        private Transform myTransform;
+        private Vector3 newPosition;
+        public StateMove GetStateMove { get; private set; }
+        public enum StateMove
         {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit))
+            moving,
+            stopMoving
+        }
+        public MovementController(CharacterController characterController)
+        {
+            this.charController = characterController;
+        }
+
+        public void LocatePosition(Transform myTransform, float distanceToTarget, float speed)
+        {
+            if (Input.GetMouseButtonDown(0))
             {
-                newPosition = new Vector3(hit.point.x, hit.point.y, hit.point.z);
-            }
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    public bool MoveToPosition(Transform myTransform, float distanceToTarget)
-    {
-        this.myTransform = myTransform;
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out hit))
+                {
+                    this.speedMove = speed;
+                    newPosition = new Vector3(hit.point.x, hit.point.y, hit.point.z);
+                    GetStateMove = StateMove.moving;
+                }
 
-        Vector3 direction = newPosition - myTransform.position;
-        if (direction.magnitude > distanceToTarget)
-        {
-            direction.y = 0;
-            direction.Normalize();
-            charController.Move(direction * speedMove * Time.deltaTime);
-            RotateToPosition(direction);
-            return true;
+            }
+            if (GetStateMove == StateMove.moving)
+            {
+                this.myTransform = myTransform;
+                MoveToPosition(distanceToTarget);
+            }
         }
-        else
+        public void LocatePositionTarget(Transform myTransform,Vector3 target, float distanceToTarget, float speed)
         {
-            StopMoving();
-            return false;
+            newPosition = target;
+            if (GetStateMove == StateMove.moving)
+            {
+                this.myTransform = myTransform;
+                MoveToPosition(distanceToTarget);
+            }
         }
-    }
-    private void StopMoving()
-    {
-        Debug.Log("Stop");
-    }
-    private void RotateToPosition(Vector3 lookDirection)
-    {
-        myTransform.rotation = Quaternion.LookRotation(lookDirection);
+        private bool MoveToPosition(float distanceToTarget)
+        {
+            Vector3 direction = newPosition - myTransform.position;
+            if (direction.magnitude >= distanceToTarget)
+            {
+                direction.y = 0;
+                direction.Normalize();
+                charController.Move(direction * speedMove * Time.deltaTime);
+                RotateToPosition(direction);
+                return true;
+            }
+            else
+            {
+                StopMoving();
+                return false;
+            }
+        }
+        private void StopMoving()
+        {
+            GetStateMove = StateMove.stopMoving;
+            Debug.Log("Stop");
+        }
+        public void RotateToPosition(Vector3 lookDirection)
+        {
+            myTransform.rotation = Quaternion.RotateTowards(myTransform.rotation, Quaternion.LookRotation(lookDirection), 1f);
+        }
     }
 }
-
